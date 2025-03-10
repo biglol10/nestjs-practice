@@ -1,0 +1,12 @@
+services: # 우리가 실행할 서비스들
+  postgres: # postgres라는 이름을 가진 서비스를 만들거다
+    image: postgres:15
+    restart: always # 실행할 때마다 자동으로 재시작
+    volumes: # 도커 이미지 안에서 생성됐던 파일들은 컨테이너 종료 후 사라진다. 그래서 외부에 저장해두고 싶다면 이렇게 설정해줘야 한다. PostgreSQL 안에다가 저장해놨던 데이터를 실제 저희 호스트 OS의 볼륨과 맵핑을 해줄 거
+      - ./postgres-data:/var/lib/postgresql/data # 현재 이 docker-compose.yaml이 존재하는 위치에 postgres-data 라는 폴더와 우리가 실제 이 postgres 이미지 안에 있는 폴더를 연동. :을 기준으로 왼쪽은 호스트 OS의 위치, 오른쪽은 도커 컨테이너 안에 있는 폴더 (이미지안의 위치). postgres-data라는 폴더를 이미지 안에 존재하는 위치인 file-lib-postgreSQL-data라는 폴더를 우리가 완전히 싱크를 맞춰주겠다는 뜻
+    ports: # 호스트 OS의 포트와 도커 컨테이너의 포트를 연결해주는 설정
+      - '5432:5432' # 호스트 OS의 5432번 포트와 도커 컨테이너의 5432번 포트를 연결
+    environment: # 환경변수 설정
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres

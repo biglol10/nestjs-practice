@@ -19,12 +19,12 @@ export class PostsController {
 
   @Get()
   getAllPosts() {
-    return this.postsService.findAll();
+    return this.postsService.getAllPosts();
   }
 
   @Get(':id')
   getPost(@Param('id') id: string) {
-    return this.postsService.findOne(parseInt(id));
+    return this.postsService.getPostById(parseInt(id));
   }
 
   @Post()

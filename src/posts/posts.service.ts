@@ -43,6 +43,26 @@ export class PostsService {
     },
   ];
 
+  async getAllPosts() {
+    // 컨트롤러에서 바로 반환하기 때문에 async 안해도 되지만 혹시 모르니
+    return this.postsRepository.find(); // 모든 repository의 함수는 async이다
+  }
+
+  async getPostById(id: number) {
+    const post = await this.postsRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
+    return post;
+  }
+
   findAll(): Post[] {
     return this.posts;
   }
@@ -55,17 +75,17 @@ export class PostsService {
     return post;
   }
 
-  create(author: string, title: string, content?: string): Post[] {
-    const newPost = {
-      id: this.posts.length + 1,
+  async create(author: string, title: string, content?: string) {
+    const post = this.postsRepository.create({
       author,
       title,
-      content: content || '',
-      createdAt: new Date().toISOString(),
-    };
+      content,
+      likeCount: 0,
+      commentCount: 0,
+    }); // create는 실제로 db에 저장하는게 아니고 객체만 생성. 그래서 비동기가 아닌 동기
 
-    this.posts.push(newPost);
-    return this.posts;
+    const newPost = await this.postsRepository.save(post);
+    return newPost;
   }
 
   update(id: number, title: string, content: string): Post {

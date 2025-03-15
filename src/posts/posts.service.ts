@@ -74,19 +74,20 @@ export class PostsService {
     }
     return post;
   }
+  // async create(authorId: number, title: string, content?: string) {
+  //   const post = this.postsRepository.create({
+  //     author: {
+  //       id: authorId,
+  //     },
+  //     title,
+  //     content,
+  //     likeCount: 0,
+  //     commentCount: 0,
+  //   }); // create는 실제로 db에 저장하는게 아니고 객체만 생성. 그래서 비동기가 아닌 동기
 
-  async create(author: string, title: string, content?: string) {
-    const post = this.postsRepository.create({
-      author,
-      title,
-      content,
-      likeCount: 0,
-      commentCount: 0,
-    }); // create는 실제로 db에 저장하는게 아니고 객체만 생성. 그래서 비동기가 아닌 동기
-
-    const newPost = await this.postsRepository.save(post);
-    return newPost;
-  }
+  //   const newPost = await this.postsRepository.save(post);
+  //   return newPost;
+  // }
 
   async update(id: number, title: string, content: string) {
     // 1) 만약에 데이터가 존재하지 않는다면 (id를 기준으로) 새로 생성한다
@@ -106,9 +107,9 @@ export class PostsService {
       post.title = title;
     }
 
-    if (content) {
-      post.content = content;
-    }
+    // if (content) {
+    //   post.content = content;
+    // }
 
     const updatedPost = await this.postsRepository.save(post);
     return updatedPost;

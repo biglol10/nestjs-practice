@@ -27,14 +27,14 @@ export class PostsController {
     return this.postsService.getPostById(parseInt(id));
   }
 
-  @Post()
-  createPost(
-    @Body('author') author: string,
-    @Body('title') title: string,
-    @Body('content') content?: string,
-  ) {
-    return this.postsService.create(author, title, content);
-  }
+  // @Post()
+  // createPost(
+  //   @Body('author') author: string,
+  //   @Body('title') title: string,
+  //   @Body('content') content?: string,
+  // ) {
+  //   return this.postsService.create(author, title, content);
+  // }
 
   @Put(':id')
   updatePost(

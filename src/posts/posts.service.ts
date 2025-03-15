@@ -88,11 +88,30 @@ export class PostsService {
     return newPost;
   }
 
-  update(id: number, title: string, content: string): Post {
-    const post = this.findOne(id);
-    post.title = title;
-    post.content = content;
-    return post;
+  async update(id: number, title: string, content: string) {
+    // 1) 만약에 데이터가 존재하지 않는다면 (id를 기준으로) 새로 생성한다
+    // 2) 만약에 데이터가 존재한다면 그 데이터를 업데이트 한다
+
+    const post = await this.postsRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
+    if (title) {
+      post.title = title;
+    }
+
+    if (content) {
+      post.content = content;
+    }
+
+    const updatedPost = await this.postsRepository.save(post);
+    return updatedPost;
   }
 
   delete(id: number): Post[] {

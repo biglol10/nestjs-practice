@@ -7,6 +7,7 @@ import { UsersModel } from './entities/users.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([UsersModel])], // repository 등록
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService], // provider는 해당 모듈 안에서만 사용 가능
+  exports: [UsersService], // 다른 모듈에서 사용 가능
 })
 export class UsersModule {}

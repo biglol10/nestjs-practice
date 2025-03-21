@@ -1,7 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UsersModel } from 'src/users/entities/users.entity';
+import { JWT_SECRET } from './const/auth.const';
+import { UsersService } from 'src/users/users.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+  constructor(
+    private readonly jwtService: JwtService, // authModule안에서 jwt module을 임포트 해줬기 때문에 서비스에서 JWTService를 inject받을 수 있음
+    private readonly usersService: UsersService,
+  ) {}
   /**
    * 우리가 만드려는 기능
    *
@@ -28,4 +37,70 @@ export class AuthService {
    *    4. loginWithEmail에서 반환된 데이터를 기반으로 토큰 생성
    *
    */
+
+  /**
+   * 1) email
+   * 2) sub -> id
+   * 3) type: 'access' | 'refresh'
+   *
+   * (email: string, id: number)
+   */
+  signToken(user: Pick<UsersModel, 'id' | 'email'>, isRefreshToken: boolean) {
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      type: isRefreshToken ? 'refresh' : 'access',
+    };
+
+    return this.jwtService.sign(payload, {
+      secret: JWT_SECRET,
+      expiresIn: isRefreshToken ? 3600 : 300,
+    });
+  }
+
+  loginUser(user: Pick<UsersModel, 'id' | 'email'>) {
+    return {
+      accessToken: this.signToken(user, false),
+      refreshToken: this.signToken(user, true),
+    };
+  }
+
+  async authenticateWithEmailAndPassword(
+    user: Pick<UsersModel, 'email' | 'password'>,
+  ) {
+    /**
+     * 사용자가 존재하는지 확인
+     * 비밀번호가 맞는지 확인
+     * 모두 통과되면 찾은 사용자 정보 반환
+     *  */
+
+    const existingUser = await this.usersService.getUserByEmail(user.email);
+
+    if (!existingUser) {
+      throw new UnauthorizedException(
+        '이메일 또는 비밀번호가 일치하지 않습니다.',
+      );
+    }
+
+    /**
+     * 입력된 비밀번호
+     * 기존 해시 (hash) => 사용자 정보에 저장되어 있는 hash
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const passOk = await bcrypt.compare(user.password, existingUser.password);
+
+    if (passOk !== true) {
+      throw new UnauthorizedException(
+        '이메일 또는 비밀번호가 일치하지 않습니다.',
+      );
+    }
+
+    return existingUser;
+  }
+
+  async loginWithEmail(user: Pick<UsersModel, 'email' | 'password'>) {
+    const existingUser = await this.authenticateWithEmailAndPassword(user);
+
+    return this.loginUser(existingUser);
+  }
 }

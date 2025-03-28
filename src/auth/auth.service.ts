@@ -67,6 +67,84 @@ export class AuthService {
    */
 
   /**
+   * Header로 부터 토큰을 받을 때
+   *
+   * {authorization: 'Basic {token}'}
+   * {authorization: 'Bearer {token}'}
+   */
+  extractTokenFromHeader(header: string, isBearer: boolean) {
+    const splitToken = header.split(' ');
+
+    const prefix = isBearer ? 'Bearer' : 'Basic';
+
+    if (splitToken.length !== 2 || splitToken[0] !== prefix) {
+      throw new UnauthorizedException('토큰이 올바르지 않습니다');
+    }
+
+    const token = splitToken[1];
+
+    return token;
+  }
+
+  /**
+   * Basic asdfasdf
+   *
+   * 1) -> email:password
+   * 2) email:passsword -> [email, password] -> {email: email, password: password}
+   */
+  decodeBasicToken(base64String: string) {
+    const decoded = Buffer.from(base64String, 'base64').toString('utf-8'); // 프로그래밍 할 때 가장 기준이 되는 유니버셜한 인코딩으로 변경
+
+    const split = decoded.split(':');
+
+    if (split.length !== 2) {
+      throw new UnauthorizedException('토큰이 올바르지 않습니다');
+    }
+
+    const email = split[0];
+    const password = split[1];
+
+    return { email, password };
+  }
+
+  /**
+   * 토큰 검증
+   */
+  verifyToken(token: string) {
+    try {
+      return this.jwtService.verify(token, {
+        secret: JWT_SECRET,
+      });
+    } catch {
+      throw new UnauthorizedException('토큰이 만료됐거나 잘못된 토큰입니다');
+    }
+  }
+
+  // 토큰 새로 발급받기
+  rotateToken(token: string, isRefreshToken: boolean) {
+    const decoded = this.jwtService.verify(token, {
+      secret: JWT_SECRET,
+    });
+
+    /**
+     * sub: id
+     * email: email
+     * type: 'access' | 'refresh'
+     */
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException(
+        '토큰 재발급은 Refresh Token으로 진행해야 합니다',
+      );
+    }
+
+    return this.signToken({ ...decoded }, isRefreshToken);
+  }
+
+  /**
+   * 토큰 생성
+   */
+
+  /**
    * 1) email
    * 2) sub -> id
    * 3) type: 'access' | 'refresh'
@@ -106,7 +184,7 @@ export class AuthService {
 
     if (!existingUser) {
       throw new UnauthorizedException(
-        '이메일 또는 비밀번호가 일치하지 않습니다.',
+        '이메일 또는 비밀번호가 일치하지 않습니다. 11',
       );
     }
 
@@ -119,7 +197,7 @@ export class AuthService {
 
     if (passOk !== true) {
       throw new UnauthorizedException(
-        '이메일 또는 비밀번호가 일치하지 않습니다.',
+        '이메일 또는 비밀번호가 일치하지 않습니다. 22',
       );
     }
 

@@ -48,4 +48,10 @@ export class UsersService {
       where: { email },
     });
   }
+
+  async getUserById(id: number) {
+    return this.usersRepository.findOne({
+      where: { id },
+    });
+  }
 }

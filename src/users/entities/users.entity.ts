@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { RolesEnum } from '../const/roles.const';
+import { PostsModel } from 'src/posts/entities/posts.entity';
 @Entity()
 export class UsersModel {
   @PrimaryGeneratedColumn()
@@ -25,4 +26,7 @@ export class UsersModel {
 
   @Column()
   password: string;
+
+  @OneToMany(() => PostsModel, (post) => post.author)
+  posts: PostsModel[];
 }

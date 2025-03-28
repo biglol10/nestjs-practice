@@ -1,14 +1,20 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { Post as PostType, PostsService } from './posts.service';
+import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
+import { UsersModel } from 'src/users/entities/users.entity';
+import { User } from 'src/users/decorator/decorator';
 
 @Controller('posts')
 export class PostsController {
@@ -23,18 +29,21 @@ export class PostsController {
   }
 
   @Get(':id')
-  getPost(@Param('id') id: string) {
-    return this.postsService.getPostById(parseInt(id));
+  getPost(@Param('id', ParseIntPipe) id: number) {
+    // (ParseIntPipe) Pipe. Controller 진입 전 사전에 검증
+    return this.postsService.getPostById(id);
   }
 
-  // @Post()
-  // createPost(
-  //   @Body('author') author: string,
-  //   @Body('title') title: string,
-  //   @Body('content') content?: string,
-  // ) {
-  //   return this.postsService.create(author, title, content);
-  // }
+  @Post()
+  @UseGuards(AccessTokenGuard)
+  postPosts(
+    // @User() user: UsersModel,
+    @User('id') userId: number, // User()로 전체를 가져오지말고
+    @Body('title') title: string,
+    @Body('content') content: string,
+  ) {
+    return this.postsService.createPost(userId, title, content);
+  }
 
   @Put(':id')
   updatePost(

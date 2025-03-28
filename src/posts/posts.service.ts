@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
+import { UsersService } from 'src/users/users.service';
 
 export interface Post {
   id: number;
@@ -17,6 +18,7 @@ export class PostsService {
     // constructor 그 다음에 여기에다가 우리가 post-repository를 주입을 시킴
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>, // 이렇게 해주면 저희가 postModel을 다루는 레포지토리 타입을 저희가 지정을 할 수가 있죠
+    private readonly usersService: UsersService,
   ) {} // 그런데 이게 저희가 TypeORM으로부터 를 보여주기 위해서 annotation 하나 더 추가했어요. injectRepository 라는 Decorator 에다가 역시나 post 모델을 저희가 주입할 거라고 이렇게 입력을 해주면 됩니다.
 
   private posts: Post[] = [
@@ -45,7 +47,9 @@ export class PostsService {
 
   async getAllPosts() {
     // 컨트롤러에서 바로 반환하기 때문에 async 안해도 되지만 혹시 모르니
-    return this.postsRepository.find(); // 모든 repository의 함수는 async이다
+    return this.postsRepository.find({
+      relations: ['author'],
+    }); // 모든 repository의 함수는 async이다
   }
 
   async getPostById(id: number) {
@@ -55,7 +59,6 @@ export class PostsService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
@@ -74,20 +77,19 @@ export class PostsService {
     }
     return post;
   }
-  // async create(authorId: number, title: string, content?: string) {
-  //   const post = this.postsRepository.create({
-  //     author: {
-  //       id: authorId,
-  //     },
-  //     title,
-  //     content,
-  //     likeCount: 0,
-  //     commentCount: 0,
-  //   }); // create는 실제로 db에 저장하는게 아니고 객체만 생성. 그래서 비동기가 아닌 동기
 
-  //   const newPost = await this.postsRepository.save(post);
-  //   return newPost;
-  // }
+  async createPost(authorId: number, title: string, content: string) {
+    const post = this.postsRepository.create({
+      author: { id: authorId }, // author 객체에 id만 전달
+      title,
+      content,
+      likeCount: 0,
+      commentCount: 0,
+    });
+
+    const newPost = await this.postsRepository.save(post);
+    return newPost;
+  }
 
   async update(id: number, title: string, content: string) {
     // 1) 만약에 데이터가 존재하지 않는다면 (id를 기준으로) 새로 생성한다

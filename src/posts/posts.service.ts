@@ -75,8 +75,6 @@ export class PostsService {
      * data: Data[],
      * total: number
      * next: ??
-     *
-     *
      */
     const { page = 1, take = 20, order__createdAt = 'ASC' } = query;
 
@@ -101,18 +99,23 @@ export class PostsService {
     };
   }
 
+  // 이걸 더 많이 사용함. infinite scroll에 유용, 데이터가 사라질 때, 추가됐을 때
   async cursorPaginatePosts(query: PaginatePostDto) {
-    const { where__id_more_than, where__id_less_than, order__createdAt, take } =
-      query;
+    const {
+      where__id__more_than,
+      where__id__less_than,
+      order__createdAt,
+      take,
+    } = query;
 
     const where: FindOptionsWhere<PostsModel> = {};
 
-    if (where__id_more_than) {
-      where.id = MoreThan(where__id_more_than ?? 0);
+    if (where__id__more_than) {
+      where.id = MoreThan(where__id__more_than ?? 0);
     }
 
-    if (where__id_less_than) {
-      where.id = LessThan(where__id_less_than ?? 0);
+    if (where__id__less_than) {
+      where.id = LessThan(where__id__less_than ?? 0);
     }
 
     const order: FindOptionsOrder<PostsModel> = {};
@@ -152,7 +155,10 @@ export class PostsService {
        */
       for (const key of Object.keys(query)) {
         if (query[key]) {
-          if (key !== 'where__id_more_than' && key !== 'where__id_less_than') {
+          if (
+            key !== 'where__id__more_than' &&
+            key !== 'where__id__less_than'
+          ) {
             nextUrl.searchParams.append(key, query[key]);
           }
         }
@@ -161,9 +167,9 @@ export class PostsService {
       let key = '';
 
       if (query.order__createdAt === 'ASC') {
-        key = 'where__id_more_than';
+        key = 'where__id__more_than';
       } else {
-        key = 'where__id_less_than';
+        key = 'where__id__less_than';
       }
 
       nextUrl.searchParams.append(key, lastItem.id.toString());

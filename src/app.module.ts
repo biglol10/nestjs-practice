@@ -12,6 +12,7 @@ import { UsersModule } from './users/users.module';
 import { UsersModel } from './users/entities/users.entity';
 import { AuthModule } from './auth/auth.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CommonModule } from './common/common.module';
 // module.ts 같은 경우는 우리가 컨트롤러와 서비스를 포함한 다른 프로바이더들을 관리. 의존성들을 관리하게 되는 파일
 
 /**
@@ -43,6 +44,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     }),
     UsersModule,
     AuthModule,
+    CommonModule,
   ], // 다른 모듈을 불러올 때 사용. cli를 이용했으니 자동으로 생성됨
   controllers: [AppController],
   providers: [

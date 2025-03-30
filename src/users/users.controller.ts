@@ -13,7 +13,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @UseInterceptors(ClassSerializerInterceptor) // 자동으로 원하는 프로퍼티들을 제외시킬 수 있음. 데이터의 포멧을 변경할 수 있다
+  // @UseInterceptors(ClassSerializerInterceptor) // 자동으로 원하는 프로퍼티들을 제외시킬 수 있음. 데이터의 포멧을 변경할 수 있다
   /**
    * serialization -> 직렬화 -> 현재 시스템에서 사용되는 (NestJS) 데이터의 구조를 다른 시스템에서도 쉽게
    *                            사용할 수 있는 포멧으로 변환

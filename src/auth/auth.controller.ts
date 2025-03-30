@@ -13,7 +13,7 @@ import {
 } from './guard/bearer-token.guard';
 import { BasicTokenGuard } from './guard/basic-token.guard';
 import { MaxLengthPipe, MinLengthPipe } from './pipe/password.pipe';
-
+import { RegisterUserDto } from './dto/register-user.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -61,17 +61,7 @@ export class AuthController {
   }
 
   @Post('register/email')
-  postRegisterEmail(
-    @Body('nickname') nickname: string,
-    @Body('email') email: string,
-    // @Body('password') password: string,
-    @Body('password', new MaxLengthPipe(8, '비밀번호'), new MinLengthPipe(3))
-    password: string,
-  ) {
-    return this.authService.registerWithEmail({
-      nickname,
-      email,
-      password,
-    });
+  postRegisterEmail(@Body() body: RegisterUserDto) {
+    return this.authService.registerWithEmail(body);
   }
 }

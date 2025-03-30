@@ -11,7 +11,8 @@ import {
 
 import { TagModel } from './tag.entity';
 import { UsersModel } from 'src/users/entities/users.entity';
-
+import { IsString } from 'class-validator';
+import { StringValidationMessage } from 'src/common/validation-message/string-validation.message';
 @Entity()
 export class PostsModel {
   @PrimaryGeneratedColumn()
@@ -21,9 +22,15 @@ export class PostsModel {
   author: UsersModel;
 
   @Column()
+  @IsString({
+    message: StringValidationMessage,
+  })
   title: string;
 
   @Column()
+  @IsString({
+    message: StringValidationMessage,
+  })
   content: string;
 
   @Column()

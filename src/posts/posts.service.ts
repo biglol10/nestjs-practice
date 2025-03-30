@@ -1,9 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  FindOptionsOrder,
+  FindOptionsWhere,
+  LessThan,
+  MoreThan,
+  Repository,
+} from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { UsersService } from 'src/users/users.service';
-
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginatePostDto } from './dto/paginate-post.dto';
+import { PROTOCOL } from 'src/common/const/env.const';
+import { HOST } from 'src/common/const/env.const';
 export interface Post {
   id: number;
   title: string;
@@ -52,6 +62,132 @@ export class PostsService {
     }); // 모든 repository의 함수는 async이다
   }
 
+  async paginatePosts(query: PaginatePostDto) {
+    if (query.page) {
+      return this.pagePaginatePosts(query);
+    }
+
+    return this.cursorPaginatePosts(query);
+  }
+
+  async pagePaginatePosts(query: PaginatePostDto) {
+    /**
+     * data: Data[],
+     * total: number
+     * next: ??
+     *
+     *
+     */
+    const { page = 1, take = 20, order__createdAt = 'ASC' } = query;
+
+    const [posts, total] = await this.postsRepository.findAndCount({
+      relations: ['author'],
+      skip: (page - 1) * take,
+      take,
+      order: {
+        createdAt: order__createdAt,
+      },
+    });
+
+    const lastPage = Math.ceil(total / take);
+
+    const next =
+      page < lastPage ? `${PROTOCOL}://${HOST}/posts?page=${page + 1}` : null;
+
+    return {
+      data: posts,
+      total,
+      next, // 굳이 필요없음
+    };
+  }
+
+  async cursorPaginatePosts(query: PaginatePostDto) {
+    const { where__id_more_than, where__id_less_than, order__createdAt, take } =
+      query;
+
+    const where: FindOptionsWhere<PostsModel> = {};
+
+    if (where__id_more_than) {
+      where.id = MoreThan(where__id_more_than ?? 0);
+    }
+
+    if (where__id_less_than) {
+      where.id = LessThan(where__id_less_than ?? 0);
+    }
+
+    const order: FindOptionsOrder<PostsModel> = {};
+
+    order.createdAt = order__createdAt;
+
+    const posts = await this.postsRepository.find({
+      where,
+      order,
+      take,
+    });
+
+    /**
+     * Response
+     *
+     * data: Data[],
+     * cursor: {
+     *   afther: 마지막 Data ID
+     *
+     * },
+     * count: 응답한 데이터의 개수
+     * next: 다음 요청을 할 때 사용할 URL
+     */
+
+    const lastItem =
+      posts.length > 0 && posts.length === query.take
+        ? posts[posts.length - 1]
+        : null;
+    const nextUrl = lastItem && new URL(`${PROTOCOL}://${HOST}/posts`);
+    if (nextUrl) {
+      /**
+       * dto의 키값들을 루핑하면서
+       * 키값에 해당되는 벨류가 존재하면
+       * param에 그대로 붙여넣는다
+       *
+       * 단, where__id_more_than값만 lastItem의 마지막 값으로 넣어준다
+       */
+      for (const key of Object.keys(query)) {
+        if (query[key]) {
+          if (key !== 'where__id_more_than' && key !== 'where__id_less_than') {
+            nextUrl.searchParams.append(key, query[key]);
+          }
+        }
+      }
+
+      let key = '';
+
+      if (query.order__createdAt === 'ASC') {
+        key = 'where__id_more_than';
+      } else {
+        key = 'where__id_less_than';
+      }
+
+      nextUrl.searchParams.append(key, lastItem.id.toString());
+    }
+
+    return {
+      data: posts,
+      count: posts.length,
+      cursor: {
+        after: lastItem?.id ?? null, // 그냥 명시적으로 하기 위해
+      },
+      next: nextUrl?.toString() ?? null,
+    };
+  }
+
+  async generatePosts(userId: number) {
+    for (let i = 0; i < 100; i++) {
+      await this.createPost(userId, {
+        title: `임의로 생성된 포스트 제목 ${i}`,
+        content: `임의로 생성된 포스트 내용 ${i}`,
+      });
+    }
+  }
+
   async getPostById(id: number) {
     const post = await this.postsRepository.findOne({
       where: {
@@ -78,11 +214,11 @@ export class PostsService {
     return post;
   }
 
-  async createPost(authorId: number, title: string, content: string) {
+  async createPost(authorId: number, postDto: CreatePostDto) {
     const post = this.postsRepository.create({
       author: { id: authorId }, // author 객체에 id만 전달
-      title,
-      content,
+      title: postDto.title,
+      content: postDto.content,
       likeCount: 0,
       commentCount: 0,
     });
@@ -91,7 +227,7 @@ export class PostsService {
     return newPost;
   }
 
-  async update(id: number, title: string, content: string) {
+  async update(id: number, updatePostDto: UpdatePostDto) {
     // 1) 만약에 데이터가 존재하지 않는다면 (id를 기준으로) 새로 생성한다
     // 2) 만약에 데이터가 존재한다면 그 데이터를 업데이트 한다
 
@@ -105,21 +241,19 @@ export class PostsService {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
 
-    if (title) {
-      post.title = title;
+    if (updatePostDto.title) {
+      post.title = updatePostDto.title;
     }
 
-    // if (content) {
-    //   post.content = content;
-    // }
+    if (updatePostDto.content) {
+      post.content = updatePostDto.content;
+    }
 
     const updatedPost = await this.postsRepository.save(post);
     return updatedPost;
   }
 
-  delete(id: number): Post[] {
-    const post = this.findOne(id);
-    this.posts = this.posts.filter((post) => post.id !== id);
-    return this.posts;
+  delete(id: number) {
+    return this.postsRepository.delete(id);
   }
 }

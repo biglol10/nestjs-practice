@@ -7,15 +7,19 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Post as PostType, PostsService } from './posts.service';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { User } from 'src/users/decorator/decorator';
-
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginatePostDto } from './dto/paginate-post.dto';
 @Controller('posts')
 export class PostsController {
   // NestJS ioc 컨테이너에서 자동으로 생성이 되고 있습니다 저희가 실행을 하면은 자동으로 ioc 컨테이너가 이 주입되어야 되는 이 서비스들을 생성을 해주는 거에요
@@ -24,8 +28,9 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getAllPosts() {
-    return this.postsService.getAllPosts();
+  getPosts(@Query() query: PaginatePostDto) {
+    // return this.postsService.getAllPosts();
+    return this.postsService.paginatePosts(query);
   }
 
   @Get(':id')
@@ -39,23 +44,25 @@ export class PostsController {
   postPosts(
     // @User() user: UsersModel,
     @User('id') userId: number, // User()로 전체를 가져오지말고
-    @Body('title') title: string,
-    @Body('content') content: string,
+    @Body() body: CreatePostDto,
   ) {
-    return this.postsService.createPost(userId, title, content);
+    return this.postsService.createPost(userId, body);
   }
 
-  @Put(':id')
-  updatePost(
-    @Param('id') id: string,
-    @Body('title') title: string,
-    @Body('content') content: string,
-  ) {
-    return this.postsService.update(parseInt(id), title, content);
+  @Patch(':id')
+  patchPost(@Param('id') id: string, @Body() body: UpdatePostDto) {
+    return this.postsService.update(parseInt(id), body);
   }
 
   @Delete(':id')
   deletePost(@Param('id') id: string) {
     return this.postsService.delete(parseInt(id));
+  }
+
+  @Post('random')
+  @UseGuards(AccessTokenGuard)
+  async postPostsRandom(@User('id') user: UsersModel) {
+    await this.postsService.generatePosts(user.id);
+    return true;
   }
 }

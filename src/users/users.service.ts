@@ -54,4 +54,12 @@ export class UsersService {
       where: { id },
     });
   }
+
+  async getAllUsers() {
+    /**
+     * 비밀번호 같은거 노출시키기 싫으면 class transformer
+     * 사용해서 응답 값들을 변환하는 것을 추천
+     */
+    return this.usersRepository.find();
+  }
 }

@@ -22,6 +22,8 @@ async function bootstrap() {
          */
         enableImplicitConversion: true,
       },
+      whitelist: true, // validator가 현재 validation decorator가 적용되지 않은 모든 프로퍼티들을 삭제할 것이다. PaginatePostDto에서 정의한 것들만 받기
+      forbidNonWhitelisted: true, // 허용되지 않은 프로퍼티가 있으면 에러 발생 (PaginatePostDto에서 where__title__i_like 외 다른 프로퍼티가 있으면 에러 발생)
     }),
   );
 

@@ -12,9 +12,12 @@ import { UsersService } from 'src/users/users.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { PROTOCOL } from 'src/common/const/env.const';
-import { HOST } from 'src/common/const/env.const';
 import { CommonService } from 'src/common/common.service';
+import { ConfigService } from '@nestjs/config';
+import {
+  ENV_HOST_KEY,
+  ENV_PROTOCOL_KEY,
+} from 'src/common/const/env-keys.const';
 
 export interface Post {
   id: number;
@@ -31,6 +34,7 @@ export class PostsService {
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>, // 이렇게 해주면 저희가 postModel을 다루는 레포지토리 타입을 저희가 지정을 할 수가 있죠
     private readonly commonService: CommonService,
+    private readonly configService: ConfigService,
   ) {} // 그런데 이게 저희가 TypeORM으로부터 를 보여주기 위해서 annotation 하나 더 추가했어요. injectRepository 라는 Decorator 에다가 역시나 post 모델을 저희가 주입할 거라고 이렇게 입력을 해주면 됩니다.
 
   async getAllPosts() {
@@ -76,8 +80,11 @@ export class PostsService {
 
     const lastPage = Math.ceil(total / take);
 
+    const protocol = this.configService.get<string>(ENV_PROTOCOL_KEY);
+    const host = this.configService.get<string>(ENV_HOST_KEY);
+
     const next =
-      page < lastPage ? `${PROTOCOL}://${HOST}/posts?page=${page + 1}` : null;
+      page < lastPage ? `${protocol}://${host}/posts?page=${page + 1}` : null;
 
     return {
       data: posts,
@@ -131,7 +138,9 @@ export class PostsService {
       posts.length > 0 && posts.length === query.take
         ? posts[posts.length - 1]
         : null;
-    const nextUrl = lastItem && new URL(`${PROTOCOL}://${HOST}/posts`);
+    const protocol = this.configService.get<string>(ENV_PROTOCOL_KEY);
+    const host = this.configService.get<string>(ENV_HOST_KEY);
+    const nextUrl = lastItem && new URL(`${protocol}://${host}/posts`);
     if (nextUrl) {
       /**
        * dto의 키값들을 루핑하면서

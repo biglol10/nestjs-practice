@@ -6,13 +6,14 @@ import {
 import { Repository } from 'typeorm';
 import { UsersModel } from './entities/users.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { HASH_ROUNDS } from 'src/auth/const/auth.const';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UsersModel) // UsersService에서 inject를 해줘야 함
     private readonly usersRepository: Repository<UsersModel>,
+    private readonly configService: ConfigService,
   ) {}
 
   async createUser(user: Pick<UsersModel, 'nickname' | 'email' | 'password'>) {

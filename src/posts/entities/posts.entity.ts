@@ -34,6 +34,9 @@ export class PostsModel {
   content: string;
 
   @Column()
+  image?: string;
+
+  @Column()
   likeCount: number;
 
   @Column()

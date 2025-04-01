@@ -8,11 +8,14 @@ import {
   Repository,
 } from 'typeorm';
 import { BaseModel } from 'src/posts/entities/inheritance.entity';
-import { HOST, PROTOCOL } from './const/env.const';
 import { FILTER_MAPPER } from './const/filter-mapper.const';
-
+import { ConfigService } from '@nestjs/config';
+import { ENV_HOST_KEY } from './const/env-keys.const';
+import { ENV_PROTOCOL_KEY } from './const/env-keys.const';
 @Injectable()
 export class CommonService {
+  constructor(private readonly configService: ConfigService) {}
+
   async paginate<T extends BaseModel>(
     dto: BasePaginationDto,
     repository: Repository<T>,
@@ -38,14 +41,16 @@ export class CommonService {
 
     const lastPage = Math.ceil(total / take);
 
-    const next =
-      page < lastPage ? `${PROTOCOL}://${HOST}/${path}?page=${page + 1}` : null;
+    // const next =
+    //   page < lastPage
+    //     ? `${protocol}://${host}/${path}?page=${page + 1}`
+    //     : null;
 
-    return {
-      data,
-      total,
-      next,
-    };
+    // return {
+    //   data,
+    //   total,
+    //   next,
+    // };
   }
 
   private async pagePaginate<T extends BaseModel>(
@@ -88,8 +93,8 @@ export class CommonService {
         ? results[results.length - 1]
         : null;
 
-    const protocol = PROTOCOL;
-    const host = HOST;
+    const protocol = this.configService.get<string>(ENV_PROTOCOL_KEY);
+    const host = this.configService.get<string>(ENV_HOST_KEY);
 
     const nextUrl = lastItem && new URL(`${protocol}://${host}/${path}`);
 

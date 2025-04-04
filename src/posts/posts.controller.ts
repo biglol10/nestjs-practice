@@ -11,7 +11,9 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Post as PostType, PostsService } from './posts.service';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
@@ -20,6 +22,7 @@ import { User } from 'src/users/decorator/decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 @Controller('posts')
 export class PostsController {
   // NestJS ioc 컨테이너에서 자동으로 생성이 되고 있습니다 저희가 실행을 하면은 자동으로 ioc 컨테이너가 이 주입되어야 되는 이 서비스들을 생성을 해주는 거에요
@@ -41,12 +44,17 @@ export class PostsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
-  postPosts(
+  // @UseInterceptors(FileInterceptor('image')) // 실제 파일을 업로드할 필드 입력 'image'. postmodule에다가 등록을 해놓은 것들이 다 확인이 된 다음에 컨트롤러에서 받게될 것임
+  async postPosts(
     // @User() user: UsersModel,
     @User('id') userId: number, // User()로 전체를 가져오지말고
     @Body() body: CreatePostDto,
+    // @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.postsService.createPost(userId, body);
+    await this.postsService.createPostImage(body);
+
+    // return this.postsService.createPost(userId, body, file?.filename); // 이렇게 파일 업로드 하는건 약간 고전적인 방식
+    return this.postsService.createPost(userId, body); // 이렇게 파일 업로드 하는건 약간 고전적인 방식
   }
 
   @Patch(':id')

@@ -5,6 +5,7 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,10 +14,16 @@ import { TagModel } from './tag.entity';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { IsString } from 'class-validator';
 import { StringValidationMessage } from 'src/common/validation-message/string-validation.message';
+import { Transform } from 'class-transformer';
+import { join } from 'path';
+import { POST_PUBLIC_IMAGE_PATH } from 'src/common/const/path.const';
+import { BaseModel } from './inheritance.entity';
+import { ImageModel } from 'src/common/entity/image.entity';
+
 @Entity()
-export class PostsModel {
-  @PrimaryGeneratedColumn()
-  id: number;
+export class PostsModel extends BaseModel {
+  // @PrimaryGeneratedColumn()
+  // id: number;
 
   @ManyToOne(() => UsersModel, (user) => user.posts) // @JoinColumn이 없어도 되는 이유는 무조건 ManyToOne입장에서 아이디를 들고있게됨
   author: UsersModel;
@@ -33,8 +40,11 @@ export class PostsModel {
   })
   content: string;
 
-  @Column()
-  image?: string;
+  // @Column({
+  //   nullable: true,
+  // })
+  // @Transform(({ value }) => value && `/${join(POST_PUBLIC_IMAGE_PATH, value)}`)
+  // image?: string;
 
   @Column()
   likeCount: number;
@@ -42,11 +52,14 @@ export class PostsModel {
   @Column()
   commentCount: number;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @OneToMany((type) => ImageModel, (image) => image.post)
+  images: ImageModel[];
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  // @CreateDateColumn()
+  // createdAt: Date;
+
+  // @UpdateDateColumn()
+  // updatedAt: Date;
 }
 
 // @Entity()

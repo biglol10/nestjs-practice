@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { PostsModel } from '../entities/posts.entity';
 import { PickType } from '@nestjs/mapped-types';
 
@@ -14,4 +14,8 @@ export class CreatePostDto extends PickType(PostsModel, ['title', 'content']) {
   //     message: 'content는 문자열이어야 합니다.',
   //   })
   //   content: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
 }

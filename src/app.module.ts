@@ -21,6 +21,9 @@ import {
   ENV_DB_PASSWORD_KEY,
   ENV_DB_DATABASE_KEY,
 } from './common/const/env-keys.const';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { PUBLIC_FOLDER_PATH } from './common/const/path.const';
+import { ImageModel } from './common/entity/image.entity';
 // module.ts 같은 경우는 우리가 컨트롤러와 서비스를 포함한 다른 프로바이더들을 관리. 의존성들을 관리하게 되는 파일
 
 /**
@@ -32,6 +35,15 @@ import {
   imports: [
     TypeOrmModule.forFeature([UserModel, ProfileModel]),
     PostsModule,
+    ServeStaticModule.forRoot({
+      // 4022.jpg
+      // http://localhost:3000/public/posts/4022.jpg 이 아니라 http://localhost:3000/posts/4022.jpg 이렇게 요청을 해야되게 됨
+      // 그래서 꼭 public 이라는 prefix, 접두어가 붙었으면 좋겠으면 serveRoot넣기. posts/4022.jpg 하면 우리의 post 요청과 중복이 됨
+      // 그런데 posts 요청 보면 image uuid 값만 보내고 있는데 public/post라는 prefix가 붙기를 원한다면
+      // 엔티티에서 프로퍼티를 변경할 수 있는 기능인 class transformer 쓰면 됨 (@Transform)
+      rootPath: PUBLIC_FOLDER_PATH, // 파일들을 서빙할 가장 최상단의 폴더
+      serveRoot: '/public',
+    }),
     ConfigModule.forRoot({
       envFilePath: ['.env'],
       isGlobal: true, // appmodule에서만 설정하면 다른 곳에서도 쓸 수 있게 해줌
@@ -51,6 +63,7 @@ import {
         ProfileModel,
         TagModel,
         UsersModel,
+        ImageModel, // 안하면 @OneToMany((type) => ImageModel, (image) => image.post) 에서 에러
       ], // UserModel을 entities 배열에 추가
       synchronize: true, // nestjs에서 작성하는 typeorm코드와 데이터베이스의 동기화를 자동으로 맞춤
     }),

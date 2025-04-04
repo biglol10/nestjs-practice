@@ -11,11 +11,13 @@ import { extname } from 'path';
 import * as multer from 'multer';
 import { POST_IMAGE_PATH } from 'src/common/const/path.const';
 import { v4 as uuid } from 'uuid'; // uuid는 여러 버전이 있는데 일반적으로 가장 많이 쓰는게 4번 버전
+import { ImageModel } from 'src/common/entity/image.entity';
+import { PostsImagesService } from './image/images.service';
 
 // PostModule이 Module이다라는 정의
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PostsModel]),
+    TypeOrmModule.forFeature([PostsModel, ImageModel]),
     AuthModule,
     UsersModule,
     CommonModule,
@@ -52,7 +54,7 @@ import { v4 as uuid } from 'uuid'; // uuid는 여러 버전이 있는데 일반�
     // }),
   ], // TypeORM 모델과 연동이 되는 레포지토리를 사용을 하려면은 저희가 레포지토리 모듈을 import를 해줘야 돼요. for root 는 어디다 쓰냐면 우리가 type orm 에 연결 설정을 할 때 쓰고요. forFeature 같은 경우에는 저희가 모델에 해당되는 레포지토리를 주입할 때 쓰게 됩니다. 저희가 불러오고 싶은 모델들을 전부 다 넣어주면 돼요. 예를 들어서 우리가 PostModel과 관련된 레포지토리를 사용하고 싶다고 하면은 이 list에다가 PostModel 이라고 이렇게 넣어주면 됩니다
   controllers: [PostsController], // PostController를 사용하기 때문에 포스트 컨트롤러를 등록을 하게 됩니다. 클래스를 그대로 넣음 (PostController() - instance가 아니라). 이 클래스를 인스턴스화하고 싶은 게 아니고 IoC 컨테이너가 자동으로 인스턴스화하고 관리하는 거를 원함
-  providers: [PostsService], // 포스트 컨트롤러에서 이렇게 주입을 하는 값들을 전부 다 저희가 이 providers 안에다 넣어줌. 서비스가 꼭 아니더라도 저희가 특정 클래스에 컨트롤러에서 이렇게 주입을 클래스들은 전부 다 Providers 안에다가 넣어주면 됩니다
+  providers: [PostsService, PostsImagesService], // 포스트 컨트롤러에서 이렇게 주입을 하는 값들을 전부 다 저희가 이 providers 안에다 넣어줌. 서비스가 꼭 아니더라도 저희가 특정 클래스에 컨트롤러에서 이렇게 주입을 클래스들은 전부 다 Providers 안에다가 넣어주면 됩니다
 
   // 그러면은 이 모듈 안에 등록되어 있는 컨트롤러와 providers 안에서는 저희가 이 providers 안에 등록된 모든 클래스들을 인스턴스화 없이 IoC 컨테이너에 의존하면서 사용을 할 수가 있게 돼요
 

@@ -15,7 +15,9 @@ export class CreatePostDto extends PickType(PostsModel, ['title', 'content']) {
   //   })
   //   content: string;
 
-  @IsString()
+  @IsString({
+    each: true,
+  })
   @IsOptional()
-  image?: string;
+  images: string[] = [];
 }

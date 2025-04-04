@@ -9,6 +9,7 @@ import {
   FindOptionsWhere,
   LessThan,
   MoreThan,
+  QueryRunner,
   Repository,
 } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
@@ -29,6 +30,9 @@ import {
   TEMP_FOLDER_PATH,
 } from 'src/common/const/path.const';
 import { promises } from 'fs';
+import { CreatePostImageDto } from './image/dto/create-image.dto';
+import { ImageModel } from 'src/common/entity/image.entity';
+import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
 
 export interface Post {
   id: number;
@@ -46,6 +50,8 @@ export class PostsService {
     private readonly postsRepository: Repository<PostsModel>, // 이렇게 해주면 저희가 postModel을 다루는 레포지토리 타입을 저희가 지정을 할 수가 있죠
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
+    @InjectRepository(ImageModel)
+    private readonly imageRepository: Repository<ImageModel>,
   ) {} // 그런데 이게 저희가 TypeORM으로부터 를 보여주기 위해서 annotation 하나 더 추가했어요. injectRepository 라는 Decorator 에다가 역시나 post 모델을 저희가 주입할 거라고 이렇게 입력을 해주면 됩니다.
 
   async getAllPosts() {
@@ -66,7 +72,7 @@ export class PostsService {
       query,
       this.postsRepository,
       {
-        relations: ['author'],
+        ...DEFAULT_POST_FIND_OPTIONS,
       },
       'posts',
     );
@@ -81,7 +87,7 @@ export class PostsService {
     const { page = 1, take = 20, order__createdAt = 'ASC' } = query;
 
     const [posts, total] = await this.postsRepository.findAndCount({
-      relations: ['author'],
+      ...DEFAULT_POST_FIND_OPTIONS,
       skip: (page - 1) * take,
       take,
       order: {
@@ -197,12 +203,16 @@ export class PostsService {
       await this.createPost(userId, {
         title: `임의로 생성된 포스트 제목 ${i}`,
         content: `임의로 생성된 포스트 내용 ${i}`,
+        images: [],
       });
     }
   }
 
-  async getPostById(id: number) {
-    const post = await this.postsRepository.findOne({
+  async getPostById(id: number, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    const post = await repository.findOne({
+      ...DEFAULT_POST_FIND_OPTIONS,
       where: {
         id,
       },
@@ -227,43 +237,87 @@ export class PostsService {
   //   return post;
   // }
 
-  async createPostImage(dto: CreatePostDto) {
-    // dto의 이미지 이름을 기반으로
-    // 파일의 경로를 생성한다
-    const tempFilePath = join(TEMP_FOLDER_PATH, dto.image ?? '');
+  // async createPostImage(dto: CreatePostDto) {
+  //   // dto의 이미지 이름을 기반으로
+  //   // 파일의 경로를 생성한다
+  //   const tempFilePath = join(TEMP_FOLDER_PATH, dto.image ?? '');
 
-    try {
-      // 파일이 존재하는지 확인
-      // 만약에 존재하지 않는다면 에러를 던짐
-      await promises.access(tempFilePath);
-    } catch (e) {
-      throw new BadRequestException('존재하지 않는 파일입니다');
-    }
+  //   try {
+  //     // 파일이 존재하는지 확인
+  //     // 만약에 존재하지 않는다면 에러를 던짐
+  //     await promises.access(tempFilePath);
+  //   } catch (e) {
+  //     throw new BadRequestException('존재하지 않는 파일입니다');
+  //   }
 
-    // 파일의 이름만 가져오기
-    // /Users/aaa/bbb/asdf.jpg => asdf.jpg
-    const fileName = basename(tempFilePath);
+  //   // 파일의 이름만 가져오기
+  //   // /Users/aaa/bbb/asdf.jpg => asdf.jpg
+  //   const fileName = basename(tempFilePath);
 
-    // 새로 이동할 포스트 폴더의 경로 + 이미지 이름
-    // (프로젝트 절대경로)/public/posts/asdf.jpg
-    const newPath = join(POST_IMAGE_PATH, fileName);
+  //   // 새로 이동할 포스트 폴더의 경로 + 이미지 이름
+  //   // (프로젝트 절대경로)/public/posts/asdf.jpg
+  //   const newPath = join(POST_IMAGE_PATH, fileName);
 
-    // 파일 옮기기
-    await promises.rename(tempFilePath, newPath);
+  //   // 파일 옮기기
+  //   await promises.rename(tempFilePath, newPath);
 
-    return true;
+  //   return true;
+  // }
+
+  // async createPostImage(dto: CreatePostImageDto) {
+  //   // dto의 이미지 이름을 기반으로
+  //   // 파일의 경로를 생성한다
+  //   const tempFilePath = join(TEMP_FOLDER_PATH, dto.path);
+
+  //   try {
+  //     // 파일이 존재하는지 확인
+  //     // 만약에 존재하지 않는다면 에러를 던짐
+  //     await promises.access(tempFilePath);
+  //   } catch (e) {
+  //     throw new BadRequestException('존재하지 않는 파일입니다');
+  //   }
+
+  //   // 파일의 이름만 가져오기
+  //   // /Users/aaa/bbb/asdf.jpg => asdf.jpg
+  //   const fileName = basename(tempFilePath);
+
+  //   // 새로 이동할 포스트 폴더의 경로 + 이미지 이름
+  //   // (프로젝트 절대경로)/public/posts/asdf.jpg
+  //   const newPath = join(POST_IMAGE_PATH, fileName);
+
+  //   // save
+  //   const result = await this.imageRepository.save({
+  //     ...dto,
+  //   }); // create하고 save해도 되고 그냥 save해도 됨
+
+  //   // 파일 옮기기
+  //   await promises.rename(tempFilePath, newPath);
+
+  //   return result;
+  // }
+
+  getRepository(qr?: QueryRunner) {
+    // PostsModel에 대한 repository를 가져오겠다
+    return qr
+      ? qr.manager.getRepository<PostsModel>(PostsModel) // qr에 묶여있는 repository를 사용할 수 있음
+      : this.postsRepository;
   }
 
-  async createPost(authorId: number, postDto: CreatePostDto) {
-    const post = this.postsRepository.create({
+  async createPost(authorId: number, postDto: CreatePostDto, qr?: QueryRunner) {
+    // 1) create -> 저장할 객체를 생성한다
+    // 2) save -> 객체를 저장한다. (create 메서드에서 생성한 객체로)
+    const repository = this.getRepository(qr);
+
+    const post = repository.create({
       author: { id: authorId }, // author 객체에 id만 전달
       ...postDto,
       // image,
+      images: [],
       likeCount: 0,
       commentCount: 0,
     });
 
-    const newPost = await this.postsRepository.save(post);
+    const newPost = await repository.save(post);
     return newPost;
   }
 

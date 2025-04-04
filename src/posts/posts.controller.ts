@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   DefaultValuePipe,
@@ -29,6 +30,9 @@ import { PostsImagesService } from './image/images.service';
 import { LogInterceptor } from 'src/common/interceptor/log.interceptor';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
+import { HttpExceptionFilter } from 'src/common/exception-filter/http.exception-filter';
+import { UseFilters } from '@nestjs/common';
+
 @Controller('posts')
 export class PostsController {
   // NestJS ioc 컨테이너에서 자동으로 생성이 되고 있습니다 저희가 실행을 하면은 자동으로 ioc 컨테이너가 이 주입되어야 되는 이 서비스들을 생성을 해주는 거에요
@@ -42,7 +46,10 @@ export class PostsController {
 
   @Get()
   @UseInterceptors(LogInterceptor)
+  // @UseFilters(HttpExceptionFilter)
   getPosts(@Query() query: PaginatePostDto) {
+    // throw new BadRequestException('test');
+
     // return this.postsService.getAllPosts();
     return this.postsService.paginatePosts(query);
   }

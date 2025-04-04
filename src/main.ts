@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './common/exception-filter/http.exception-filter';
 
 // https://github.com/codefactory-co/nestjs-lv1
 
@@ -26,6 +27,8 @@ async function bootstrap() {
       forbidNonWhitelisted: true, // 허용되지 않은 프로퍼티가 있으면 에러 발생 (PaginatePostDto에서 where__title__i_like 외 다른 프로퍼티가 있으면 에러 발생)
     }),
   );
+
+  // app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }

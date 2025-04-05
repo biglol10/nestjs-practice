@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { Post as PostType, PostsService } from './posts.service';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
-import { UsersModel } from 'src/users/entities/users.entity';
+import { UsersModel } from 'src/users/entity/users.entity';
 import { User } from 'src/users/decorator/decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -32,6 +32,7 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { HttpExceptionFilter } from 'src/common/exception-filter/http.exception-filter';
 import { UseFilters } from '@nestjs/common';
+import { IsPublic } from 'src/common/decorator/is-public.decorator';
 
 @Controller('posts')
 export class PostsController {
@@ -45,6 +46,7 @@ export class PostsController {
   ) {}
 
   @Get()
+  @IsPublic()
   @UseInterceptors(LogInterceptor)
   // @UseFilters(HttpExceptionFilter)
   getPosts(@Query() query: PaginatePostDto) {
@@ -55,6 +57,7 @@ export class PostsController {
   }
 
   @Get(':id')
+  @IsPublic()
   @UseInterceptors(LogInterceptor)
   getPost(@Param('id', ParseIntPipe) id: number) {
     // (ParseIntPipe) Pipe. Controller 진입 전 사전에 검증
@@ -96,12 +99,12 @@ export class PostsController {
 
   @Patch(':id')
   patchPost(@Param('id') id: string, @Body() body: UpdatePostDto) {
-    return this.postsService.update(parseInt(id), body);
+    return this.postsService.updatePost(parseInt(id), body);
   }
 
   @Delete(':id')
   deletePost(@Param('id') id: string) {
-    return this.postsService.delete(parseInt(id));
+    return this.postsService.deletePost(parseInt(id));
   }
 
   @Post('random')

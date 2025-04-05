@@ -20,7 +20,7 @@ export class TransactionInterceptor implements NestInterceptor {
 
     // 트랜잭션과 관련되 모든 쿼리를 담당할
     // 쿼리 러너를 생성한다.
-    const qr = this.dataSource.createQueryRunner();
+    const qr = this.dataSource.createQueryRunner(); // TransactionInterceptor가 Injectable이기에 그냥 constructor에 넣어줘도 됨
 
     // 쿼리 러너에 연결한다.
     await qr.connect();

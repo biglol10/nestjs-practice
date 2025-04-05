@@ -1,5 +1,5 @@
 import { PartialType, PickType } from '@nestjs/mapped-types';
-import { PostsModel } from '../entities/posts.entity';
+import { PostsModel } from '../entity/posts.entity';
 import { CreatePostDto } from './create-post.dto';
 import { IsString } from 'class-validator';
 import { IsOptional } from 'class-validator';

@@ -1,9 +1,9 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserModel } from './posts/entities/user.entity';
+import { UserModel } from './posts/entity/user.entity';
 import { Repository } from 'typeorm';
-import { ProfileModel } from './posts/entities/profile.entity';
+import { ProfileModel } from './posts/entity/profile.entity';
 // 앱 컨트롤러가 이렇게 생성이 된 이유는 베이스가 되는 가장 루트에 있는 값이 존재해야 하니까 하나 자동으로 만들어 놓은 거구요
 // @Controller('post')
 @Controller()

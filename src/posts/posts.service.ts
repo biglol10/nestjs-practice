@@ -12,7 +12,7 @@ import {
   QueryRunner,
   Repository,
 } from 'typeorm';
-import { PostsModel } from './entities/posts.entity';
+import { PostsModel } from './entity/posts.entity';
 import { UsersService } from 'src/users/users.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -321,33 +321,94 @@ export class PostsService {
     return newPost;
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto) {
-    // 1) 만약에 데이터가 존재하지 않는다면 (id를 기준으로) 새로 생성한다
-    // 2) 만약에 데이터가 존재한다면 그 데이터를 업데이트 한다
+  async updatePost(postId: number, postDto: UpdatePostDto) {
+    const { title, content } = postDto;
+    // save의 기능
+    // 1) 만약에 데이터가 존재하지 않는다면 (id 기준으로) 새로 생성한다.
+    // 2) 만약에 데이터가 존재한다면 (같은 id의 값이 존재한다면) 존재하던 값을 업데이트한다.
 
     const post = await this.postsRepository.findOne({
       where: {
-        id,
+        id: postId,
       },
     });
 
     if (!post) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
+      throw new NotFoundException();
     }
 
-    if (updatePostDto.title) {
-      post.title = updatePostDto.title;
+    if (title) {
+      post.title = title;
     }
 
-    if (updatePostDto.content) {
-      post.content = updatePostDto.content;
+    if (content) {
+      post.content = content;
     }
 
-    const updatedPost = await this.postsRepository.save(post);
-    return updatedPost;
+    const newPost = await this.postsRepository.save(post);
+
+    return newPost;
   }
 
-  delete(id: number) {
-    return this.postsRepository.delete(id);
+  async deletePost(postId: number) {
+    const post = await this.postsRepository.findOne({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException();
+    }
+
+    await this.postsRepository.delete(postId);
+
+    return postId;
+  }
+
+  async checkPostExistsById(id: number) {
+    return this.postsRepository.exist({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async isPostMine(userId: number, postId: number) {
+    return this.postsRepository.exist({
+      where: {
+        id: postId,
+        author: {
+          id: userId,
+        },
+      },
+      relations: {
+        author: true,
+      },
+    });
+  }
+
+  async incrementCommentCount(postId: number, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    await repository.increment(
+      {
+        id: postId,
+      },
+      'commentCount',
+      1,
+    );
+  }
+
+  async decrementCommentCount(postId: number, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    await repository.decrement(
+      {
+        id: postId,
+      },
+      'commentCount',
+      1,
+    );
   }
 }

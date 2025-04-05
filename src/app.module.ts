@@ -1,17 +1,23 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostsModel } from './posts/entities/posts.entity';
-import { UserModel } from './posts/entities/user.entity';
-import { Student, Teacher } from './posts/entities/person.entity';
-import { ProfileModel } from './posts/entities/profile.entity';
-import { TagModel } from './posts/entities/tag.entity';
+import { PostsModel } from './posts/entity/posts.entity';
+import { UserModel } from './posts/entity/user.entity';
+import { Student, Teacher } from './posts/entity/person.entity';
+import { ProfileModel } from './posts/entity/profile.entity';
+import { TagModel } from './posts/entity/tag.entity';
 import { UsersModule } from './users/users.module';
-import { UsersModel } from './users/entities/users.entity';
+import { UsersModel } from './users/entity/users.entity';
 import { AuthModule } from './auth/auth.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { CommonModule } from './common/common.module';
 import { ConfigModule } from '@nestjs/config';
 import {
@@ -24,6 +30,10 @@ import {
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PUBLIC_FOLDER_PATH } from './common/const/path.const';
 import { ImageModel } from './common/entity/image.entity';
+import { LogMiddleware } from './common/middleware/log.middleware';
+import { CommentsModule } from './posts/comments/comments.module';
+import { CommentsModel } from './posts/comments/entity/comments.entity';
+import { AccessTokenGuard } from './auth/guard/bearer-token.guard';
 // module.ts 같은 경우는 우리가 컨트롤러와 서비스를 포함한 다른 프로바이더들을 관리. 의존성들을 관리하게 되는 파일
 
 /**
@@ -64,12 +74,14 @@ import { ImageModel } from './common/entity/image.entity';
         TagModel,
         UsersModel,
         ImageModel, // 안하면 @OneToMany((type) => ImageModel, (image) => image.post) 에서 에러
+        CommentsModel,
       ], // UserModel을 entities 배열에 추가
       synchronize: true, // nestjs에서 작성하는 typeorm코드와 데이터베이스의 동기화를 자동으로 맞춤
     }),
     UsersModule,
     AuthModule,
     CommonModule,
+    CommentsModule,
   ], // 다른 모듈을 불러올 때 사용. cli를 이용했으니 자동으로 생성됨
   controllers: [AppController],
   providers: [
@@ -79,6 +91,26 @@ import { ImageModel } from './common/entity/image.entity';
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
     },
+    {
+      provide: APP_GUARD, // 모든 요청에 적용되는 가드
+      useClass: AccessTokenGuard, // AccessTokenGuard를 전역 가드로 설정
+      // 모든 엔드포인트에서 Bearer 토큰 검증
+      // @IsPublic() 데코레이터가 있는 라우트는 검증 제외
+    },
   ],
 })
-export class AppModule {}
+
+// middleware은 로깅이나 보안적인 요소들 Cors라던가 helmet같은 것 적용할 때 사용
+// 이걸 다 통과해야 pipeline interceptor 넘어갈 수 있도록 함
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LogMiddleware).forRoutes({
+      path: 'posts', // posts에 해당되는 모든 path들을 적용할 것이다. 모든 요층은 path: '*'
+      method: RequestMethod.ALL, // 모든 메서드에 적용할 것이다
+    }); // 적용할 미들웨어 등록. 적용할 라우트 등록해줘야 함
+    consumer.apply(LogMiddleware).forRoutes({
+      path: 'posts/*',
+      method: RequestMethod.ALL,
+    });
+  }
+}

@@ -3,8 +3,8 @@ import { IsEnum, IsIn, IsInt, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { join } from 'path';
 import { POST_IMAGE_PATH, POST_PUBLIC_IMAGE_PATH } from '../const/path.const';
-import { PostsModel } from 'src/posts/entities/posts.entity';
-import { BaseModel } from 'src/posts/entities/inheritance.entity';
+import { PostsModel } from 'src/posts/entity/posts.entity';
+import { BaseModel } from 'src/common/entity/inheritance.entity';
 // import { PostsModel } from 'src/posts/entity/posts.entity';
 
 export enum ImageModelType {

@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersModel } from '../entities/users.entity';
+import { UsersModel } from '../entity/users.entity';
 // User 데코레이터는 무조건 엑세스 토큰가드를 사용한 상태에서 사용할 수 있다는 가정하에 설계해봄
 export const User = createParamDecorator(
   (data: keyof UsersModel | undefined, context: ExecutionContext) => {

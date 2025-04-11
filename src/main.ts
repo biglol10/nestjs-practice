@@ -33,3 +33,39 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
+
+/**
+ * NestJS의 실행 순서: Middleware -> Guard -> Interceptor(before) -> Pipe -> Controller -> Service -> Interceptor(after) -> Filter -> Client
+ *
+ * 1. Middleware
+ * - 라우트 핸들러 전에 호출되는 함수
+ * - 요청과 응답 객체에 접근 가능
+ * - next() 함수를 통해 다음 미들웨어로 제어 전달
+ * - 주로 사용: 인증, 로깅, 요청 파싱 등
+ * - 예: cors(), helmet(), express.json()
+ *
+ * 2. Guard
+ * - 특정 라우트에 대한 접근 허용 여부를 결정
+ * - 주로 인증/인가에 사용
+ * - true/false를 반환하여 요청 진행 여부 결정
+ * - 예: @AuthGuard(), RolesGuard
+ *
+ * 3. Interceptor
+ * - 요청과 응답을 가로채서 변형 가능
+ * - 요청 전후에 추가 로직 실행 가능
+ * - 함수 실행 시간 측정, 캐싱, 응답 매핑 등에 사용
+ * - RxJS Observable 기반으로 동작
+ * - 예: CacheInterceptor, TimeoutInterceptor
+ *
+ * 4. Pipe
+ * - 입력 데이터 변환 및 유효성 검사
+ * - 주로 @Body, @Param, @Query 등의 데이터 처리
+ * - 데이터 타입 변환, 유효성 검증에 사용
+ * - 예: ValidationPipe, ParseIntPipe
+ *
+ * 사용 시기:
+ * - 전역적인 인증/로깅 -> Middleware
+ * - 특정 라우트 접근 제어 -> Guard
+ * - 요청/응답 데이터 변형, 캐싱 -> Interceptor
+ * - 입력 데이터 검증/변환 -> Pipe
+ */

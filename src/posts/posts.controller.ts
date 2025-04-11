@@ -35,6 +35,7 @@ import { UseFilters } from '@nestjs/common';
 import { IsPublic } from 'src/common/decorator/is-public.decorator';
 import { Roles } from 'src/users/decorator/roles.decorator';
 import { RolesEnum } from 'src/users/const/roles.const';
+import { IsPostMineOrAdminGuard } from './guard/is-post-mine-or-admin.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -99,8 +100,9 @@ export class PostsController {
     return this.postsService.getPostById(post.id, qr); // 트랜잭션이 커밋되기 전에 우리가 최신 값을 가져오지 못할 수 있음. 그래서 getPostById에서 qr값을 받도록 함
   }
 
-  @Patch(':id')
-  patchPost(@Param('id') id: string, @Body() body: UpdatePostDto) {
+  @Patch(':postId')
+  @UseGuards(IsPostMineOrAdminGuard)
+  patchPost(@Param('postId') id: string, @Body() body: UpdatePostDto) {
     return this.postsService.updatePost(parseInt(id), body);
   }
 

@@ -399,7 +399,7 @@ export class PostsService {
   }
 
   async isPostMine(userId: number, postId: number) {
-    return this.postsRepository.exist({
+    return this.postsRepository.exists({
       where: {
         id: postId,
         author: {
@@ -407,6 +407,7 @@ export class PostsService {
         },
       },
       relations: {
+        // relation query를 하려면 relations에서 author:true로 해야함
         author: true,
       },
     });

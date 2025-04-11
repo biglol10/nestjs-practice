@@ -355,12 +355,36 @@ export class PostsService {
       where: {
         id: postId,
       },
+      relations: {
+        images: true, // 이미지 관계 로드
+      },
     });
 
     if (!post) {
       throw new NotFoundException();
     }
 
+    // 연관된 이미지들 먼저 삭제
+    if (post.images) {
+      // repository.manager는 EntityManager의 인스턴스로,
+      // 모든 엔티티에 대한 데이터베이스 작업을 수행할 수 있는 범용 메서드를 제공합니다.
+      // 여기서는 post.images 배열에 있는 모든 이미지 엔티티들을 한번에 삭제하는데 사용됩니다.
+      await this.postsRepository.manager.remove(post.images);
+
+      // repository.manager를 사용하는 방식
+      // 1. EntityManager를 통해 모든 엔티티에 대한 작업 가능
+      // 2. 여러 엔티티에 대한 일괄 작업에 유용
+      // 3. 트랜잭션 관리가 자동으로 됨
+      // 4. 예: await this.postsRepository.manager.remove(post.images);
+
+      // repository를 직접 사용하는 방식
+      // 1. 특정 엔티티에 대한 작업만 가능
+      // 2. 단일 엔티티 작업에 더 직관적
+      // 3. 명시적인 CRUD 작업에 적합
+      // 4. 예: await this.postsRepository.delete(postId);
+    }
+
+    // 포스트 삭제
     await this.postsRepository.delete(postId);
 
     return postId;

@@ -28,6 +28,7 @@ export class CommentsService {
       dto,
       this.commentsRepository,
       {
+        ...DEFAULT_COMMENT_FIND_OPTIONS,
         where: {
           post: {
             id: postId,
@@ -81,6 +82,10 @@ export class CommentsService {
       throw new BadRequestException('존재하지 않는 댓글입니다.');
     }
 
+    // preload는 엔티티의 일부 속성만 업데이트할 때 사용됩니다.
+    // 1. id로 기존 엔티티를 찾습니다.
+    // 2. 찾은 엔티티에 새로운 속성값들을 덮어씌웁니다.
+    // 3. 만약 엔티티가 없다면 undefined를 반환합니다.
     const prevComment = await this.commentsRepository.preload({
       id: commentId,
       ...dto,

@@ -34,6 +34,7 @@ import { LogMiddleware } from './common/middleware/log.middleware';
 import { CommentsModule } from './posts/comments/comments.module';
 import { CommentsModel } from './posts/comments/entity/comments.entity';
 import { AccessTokenGuard } from './auth/guard/bearer-token.guard';
+import { RolesGuard } from './users/guard/roles.guard';
 // module.ts 같은 경우는 우리가 컨트롤러와 서비스를 포함한 다른 프로바이더들을 관리. 의존성들을 관리하게 되는 파일
 
 /**
@@ -93,9 +94,30 @@ import { AccessTokenGuard } from './auth/guard/bearer-token.guard';
     },
     {
       provide: APP_GUARD, // 모든 요청에 적용되는 가드
-      useClass: AccessTokenGuard, // AccessTokenGuard를 전역 가드로 설정
+      useClass: AccessTokenGuard, // AccessTokenGuard를 전역 가드로 설정. 모든 api를 private로 만들었음
       // 모든 엔드포인트에서 Bearer 토큰 검증
       // @IsPublic() 데코레이터가 있는 라우트는 검증 제외
+    },
+    {
+      provide: APP_GUARD, // 앱 전체에다가 가드를 적용하면 이게 무조건 먼저 실행됨 (method에 등록한 가드보다)
+      useClass: RolesGuard,
+      /**
+       * 따라서
+       * @UseGuards(AccessTokenGuard)
+       * @Roles(RolesEnum.ADMIN) // 이 라우트는 ADMIN 사용자만 사용할 수 있도록 제한
+       * deletePost(@Param('id') id: string)
+       *
+       * @UseGuards(AccessTokenGuard) 해도 roles.guard.ts의
+       * if (!user) {
+       *   throw new UnauthorizedException('토큰을 제공해주세요');
+       * }
+       * 부분이 통과됨.
+       *
+       * 그래서 위의
+       * provide: APP_GUARD
+       * useClass: AccessTokenGuard
+       * 가 필요함
+       */
     },
   ],
 })

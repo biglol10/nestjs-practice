@@ -11,7 +11,7 @@ import { PostExistsMiddelware } from './middleware/post-exists.middleware';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CommentsModel]),
+    TypeOrmModule.forFeature([CommentsModel]), // repository 사용이 가능해짐
     CommonModule,
     AuthModule,
     UsersModule,
@@ -23,6 +23,6 @@ import { PostExistsMiddelware } from './middleware/post-exists.middleware';
 })
 export class CommentsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(PostExistsMiddelware).forRoutes(CommentsController);
+    consumer.apply(PostExistsMiddelware).forRoutes(CommentsController); // for route말고 적용하고 싶은 컨트롤러를 통째로 넣을 수 있음
   }
 }

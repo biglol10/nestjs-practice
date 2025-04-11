@@ -19,7 +19,7 @@ import {
 import { Post as PostType, PostsService } from './posts.service';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
 import { UsersModel } from 'src/users/entity/users.entity';
-import { User } from 'src/users/decorator/decorator';
+import { User } from 'src/users/decorator/user.decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
@@ -33,6 +33,8 @@ import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { HttpExceptionFilter } from 'src/common/exception-filter/http.exception-filter';
 import { UseFilters } from '@nestjs/common';
 import { IsPublic } from 'src/common/decorator/is-public.decorator';
+import { Roles } from 'src/users/decorator/roles.decorator';
+import { RolesEnum } from 'src/users/const/roles.const';
 
 @Controller('posts')
 export class PostsController {
@@ -103,12 +105,14 @@ export class PostsController {
   }
 
   @Delete(':id')
+  // @UseGuards(AccessTokenGuard)
+  @Roles(RolesEnum.ADMIN) // 이 라우트는 ADMIN 사용자만 사용할 수 있도록 제한
   deletePost(@Param('id') id: string) {
     return this.postsService.deletePost(parseInt(id));
   }
 
   @Post('random')
-  @UseGuards(AccessTokenGuard)
+  // @UseGuards(AccessTokenGuard)
   async postPostsRandom(@User('id') user: UsersModel) {
     await this.postsService.generatePosts(user.id);
     return true;

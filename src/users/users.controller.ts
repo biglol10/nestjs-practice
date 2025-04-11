@@ -7,6 +7,8 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { Roles } from './decorator/roles.decorator';
+import { RolesEnum } from './const/roles.const';
 
 @Controller('userscontroller')
 export class UsersController {
@@ -20,6 +22,7 @@ export class UsersController {
    *                            -> class의 object에서 JSON포멧으로 변환
    * deserialization -> 역직렬화 -> 다른 시스템에서 사용되는 포멧을 현재 시스템에서 사용할 수 있는 데이터 구조로 변환
    */
+  @Roles(RolesEnum.ADMIN)
   getUsers() {
     // @Exclude 덕분에 json형태로 변환될 때 제외되는 프로퍼티들이 있음
     return this.usersService.getAllUsers();

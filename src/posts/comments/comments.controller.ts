@@ -21,7 +21,7 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import { QueryRunner as QR } from 'typeorm';
 import { PostsService } from '../posts.service';
-import { User } from 'src/users/decorator/decorator';
+import { User } from 'src/users/decorator/user.decorator';
 import { IsPublic } from 'src/common/decorator/is-public.decorator';
 import { IsCommentMineOrAdminGuard } from './guard/is-comment-mine-or-admin.guard';
 
